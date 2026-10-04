@@ -1,3 +1,5 @@
+#### 1. Message Types & Structured Schema Definitions
+
 ### CONNECT
 
 **Direction:** Client -> Server
@@ -16,7 +18,7 @@
   "message_type": "CONNECT",
   "user_alias": "GRRM#1_FAN"
 }
-
+```
 ### LOBBY_WAIT
 
 **Direction:** Server -> Client
@@ -33,7 +35,7 @@
 {
   "message_type": "LOBBY_WAIT"
 }
-
+```
 ### GAME_START
 
 **Direction:** Server -> Client
@@ -54,7 +56,7 @@
   "opponent_alias": "Sweet Robin",
   "role": true
 }
-
+```
 ### SEND_QUESTION
 
 **Direction:** Server -> Client
@@ -83,7 +85,7 @@
   "option4": "His first love was not actually a prostitute.",
   "question_number": 4
 }
-
+```
 ### SEND_ANSWER
 
 **Direction:** Client -> Server
@@ -104,7 +106,7 @@
   "answer": 2,
   "question_number": 4
 }
-
+```
 ### STATE_UPDATE
 
 **Direction:** Server -> Client
@@ -131,7 +133,7 @@
   "is_sudden_death": false,
   "question_number": 4
 }
-
+```
 ### ERROR
 
 **Direction:** Server -> Client
@@ -152,7 +154,7 @@
   "error_code": "DUPLICATE_ANSWER",
   "error_message": "An answer has already been submitted for this question."
 }
-
+```
 ### DISCONNECT
 
 **Direction:** Client -> Server
@@ -169,7 +171,7 @@
 {
   "message_type": "DISCONNECT"
 }
-
+```
 ### GAME_OVER
 
 **Direction:** Server -> Clients
@@ -194,3 +196,8 @@
   "client_two_score": 5,
   "end_reason": "NORMAL"
 }
+```
+
+#### 2. TCP Stream Packet Framing & Boundary Handling
+
+**Packet framing choice and receiver logic explanation**: 
