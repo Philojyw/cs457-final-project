@@ -52,7 +52,7 @@
 {
   "message_type": "GAME_START",
   "opponent_alias": "Sweet Robin",
-  "role": True
+  "role": true
 }
 
 ### SEND_QUESTION
@@ -92,8 +92,8 @@
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| message_type | string | Yes | Allows client to identify the category of message it is receiving, message_type must be exactly "SEND_QUESTION". |
-| answer | int | Yes | Supplies the server with the clients answer.|
+| message_type | string | Yes | Allows the server to identify the category of message it is receiving, message_type must be exactly "SEND_QUESTION". |
+| answer | int | Yes | Supplies the server with the clients answer. Answer must be a value from 1-4. |
 | question_number | int | Yes | Supplies the server the identifier to pair an answer to a given question. |
 
 **Example Payload**
@@ -101,7 +101,7 @@
 ```json
 {
   "message_type": "SEND_ANSWER",
-  "answer": "2",
+  "answer": 2,
   "question_number": 4
 }
 
@@ -114,14 +114,83 @@
 | Field | Type | Required | Description |
 |---|---|---|---|
 | message_type | string | Yes | Allows client to identify the category of message it is receiving, message_type must be exactly "STATE_UPDATE". |
-| answer | int | Yes | Supplies the server with the clients answer.|
-| question_number | int | Yes | Supplies the server the identifier to pair an answer to a given question. |
+| client_one_score | int | Yes | Supplies the client with the new total for client one's score.|
+| client_two_score | int | Yes | Supplies the client with the new total for client two's score. |
+| correct_answer | string | Yes | Supplies the client with the correct answer for the previous question. |
+| is_sudden_death | bool | Yes | Supplies the client with a boolean to tell if sudden death is being entered. |
+| question_number | int | Yes | Allows the client to pair an answer to a given question. |
 
 **Example Payload**
 
 ```json
 {
-  "message_type": "SEND_ANSWER",
-  "answer": "2",
+  "message_type": "STATE_UPDATE",
+  "client_one_score": 3,
+  "client_two_score": 5,
+  "correct_answer": "His first love was not actually a prostitute.",
+  "is_sudden_death": false,
   "question_number": 4
+}
+
+### ERROR
+
+**Direction:** Server -> Client
+
+**Purpose:** Server notifies a client that a submitted message or action was invalid and could not be processed.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| message_type | string | Yes | Allows client to identify the category of message it is receiving. message_type must be exactly "ERROR". |
+| error_code | string | Yes | Identifies the type of error that occurred. Valid values include "INVALID_ANSWER", "DUPLICATE_ANSWER", and "MALFORMED_MESSAGE". |
+| error_message | string | Yes | Provides a description of the error for the client. |
+
+**Example Payload**
+
+```json
+{
+  "message_type": "ERROR",
+  "error_code": "DUPLICATE_ANSWER",
+  "error_message": "An answer has already been submitted for this question."
+}
+
+### DISCONNECT
+
+**Direction:** Client -> Server
+
+**Purpose:** Client notifies the server that the player is intentionally leaving the game.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| message_type | string | Yes | Allows server to identify the category of message it is receiving. message_type must be exactly "DISCONNECT". |
+
+**Example Payload**
+
+```json
+{
+  "message_type": "DISCONNECT"
+}
+
+### GAME_OVER
+
+**Direction:** Server -> Clients
+
+**Purpose:** Server notifies connected clients that the game has ended and provides the winner, final scores, and reason the game ended.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| message_type | string | Yes | Allows client to identify the category of message it is receiving. message_type must be exactly "GAME_OVER". |
+| winner_alias | string | Yes | Supplies the alias of the player who won the game. |
+| client_one_score | int | Yes | Supplies the final score for Client 1. |
+| client_two_score | int | Yes | Supplies the final score for Client 2. |
+| end_reason | string | Yes | Identifies how the game ended. Valid values are "NORMAL", "SUDDEN_DEATH", or "FORFEIT". |
+
+**Example Payload**
+
+```json
+{
+  "message_type": "GAME_OVER",
+  "winner_alias": "GRRM#1_FAN",
+  "client_one_score": 7,
+  "client_two_score": 5,
+  "end_reason": "NORMAL"
 }
