@@ -1,3 +1,4 @@
+```mermaid
 stateDiagram-v2
     [*] --> INIT
 
@@ -7,4 +8,4 @@ stateDiagram-v2
     WAITING_FOR_PLAYER_2 --> WAITING_FOR_PLAYER_1: Player 1 disconnects
     WAITING_FOR_PLAYER_2 --> GAME_START: Player 2 CONNECT received
 
-    
+```
