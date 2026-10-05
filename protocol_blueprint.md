@@ -201,3 +201,19 @@
 #### 2. TCP Stream Packet Framing & Boundary Handling
 
 **Packet framing choice and receiver logic explanation**: 
+
+I am using length-prefixed framing. Basically, when using length-prefixing every message sent has a 4 byte header that tells the receiver “this payload will be exactly the size specified in the header, don’t try to parse the data from this message until you received the full message”. This is needed because a single recv() may not get a full payload, or may receive past a payload into the next payloads header. The 4 byte header must be in Network byte order, which is big endian order, regardless of whether the client or server machines use little or big endian. It is important that if recv() returns b"", even if it hasn't finished parsing the full packet, it ends the connection rather than continuing to wait for more data.
+
+To achieve this, the sender must take the message dictionary and turn that into a JSON payload. It then encodes that payload at UTF-8 bytes, measure how many bytes that is, and convert that to length into a 4 byte big endian header. It then sends the header and the converted payload.
+
+The receiver starts by reading until it has exactly 4 bytes, so that it is sure it receives the full header. It decodes the header to get the length of the payload, and then keeps reading in bytes until it has received exactly the amount of info specified by the header. It then decodes the payload as UTF-8 bytes and then parses the JSON.
+
+**Raw wire-stream example**:
+
+[00 00 00 37]{"message_type": "CONNECT", "user_alias": "GRRM#1_FAN"}[00 00 00 38]{"message_type": "CONNECT", "user_alias": "Sweet Robin"}
+
+#### 3. Connection Termination & Socket Lifecycle Management
+
+**Graceful Disconnect**:
+
+When a clients chooses to intentionally leave the game, the client will send a DISCONNECT message to the 
