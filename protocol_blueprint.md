@@ -216,4 +216,26 @@ The receiver starts by reading until it has exactly 4 bytes, so that it is sure 
 
 **Graceful Disconnect**:
 
-When a clients chooses to intentionally leave the game, the client will send a DISCONNECT message to the 
+A graceful disconnect occurs when a clients chooses to intentionally leave the game, the client will send a DISCONNECT message to the server. This is how the server will distinguish an intentional disconnect from from a disconnect caused by some unexpected issue. 
+
+When the server receives a DISCONNECT message, it will identify the leaving player and update the state accordingly. If the leaving player were the only player in a waiting lobby, the state will be updated to EMPTY_LOBBY. If the disconnect happened during the game, a GAME_OVER message will be sent to the remaining player declaring them the winner, with the end reason being "forfeit".
+
+The server and client will then close the socket normally, leading to TCP initiating its 4-way FIN handshake.
+
+**TCP EOF / Clean Closure**:
+
+A clean TCP closure can occur when the remote client closes its socket normally. When this happens, a recv() call returns 0 bytes (b"" in Python), which indicates EOF. The server must check for this condition while reading both the 4-byte length header and the JSON payload. If EOF is detected before the expected data has been fully received, the incomplete message is discarded and the server stops waiting for additional bytes.
+
+The server then treats the client as disconnected, updates the game state, closes the associated socket, and begins the appropriate cleanup or forfeit handling. Checking for EOF is necessary to prevent the server from repeatedly calling recv() on a connection that has already been closed.
+
+**Abrupt Connection Failure**:
+
+An abrupt connection failure occurs when the TCP connection is lost unexpectedly, such as when a client crashes, a process is forcefully terminated, or a network connection fails. Unlike a graceful disconnect, the client may not have the opportunity to send a DISCONNECT message before the connection is lost.
+
+The server must catch socket-related exceptions instead of allowing them to crash the game server. A ConnectionResetError can occur when the connection is forcibly reset by the remote system, while a BrokenPipeError can occur when the server attempts to send data through a socket whose remote endpoint is no longer available. When one of these errors occurs, the server treats the affected player as disconnected and begins the same game-state cleanup used for other unexpected disconnects.
+
+**Game-Level Disconnect Handling**:
+
+If either player disconnects while a game is active, the server identifies which player lost the connection and declares the remaining connected player the winner by forfeit. If the remaining player's connection is still available, the server sends that client a GAME_OVER message with an end_reason of "FORFEIT".
+
+The server does not attempt to continue sending messages to the disconnected player's socket. After notifying the remaining player, the server closes any remaining sockets associated with the game and clears the current game state so that resources can be released and the server can prepare for a future game.
