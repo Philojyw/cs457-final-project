@@ -108,7 +108,49 @@ The AI is explicitly instructed not to:
 
 The prompts and implementation constraints are documented in `ai_prompts.md`.
 
-## 3. Game Behavior & Server Concurrency Architecture (Sprint 2 Deliverable) *To be completed during Sprint 2.* 
+---
+
+## 3. Game Behavior & Server Concurrency Architecture (Sprint 2 Deliverable)
+
+### 3.1 Server Concurrency Strategy
+
+- **Architecture Choice:** Non-blocking I/O multiplexing using Python's `selectors` module and `selectors.DefaultSelector`.
+
+- **Connection Handling:** The TriviaNet server will operate using a single event loop rather than creating a separate thread for each connected player. The listening socket and each accepted client socket will be placed into non-blocking mode with `setblocking(False)` and registered with the selector. The selector will monitor sockets for read and write readiness so that the server can service either player without blocking while waiting for the other player.
+
+- **Connection Lifecycle:** When the listening socket becomes ready, the server will accept the new TCP connection, place the client socket into non-blocking mode, create a session record for the client, and register the socket with the selector. After receiving a valid `CONNECT` message, the first player will receive `LOBBY_WAIT`. Once the second player registers, both players will receive `GAME_START` and the match will begin. During the match, client sockets will remain registered with the selector until the client disconnects, the connection fails, or the game completes. Closed sockets will be unregistered from the selector before being closed.
+
+- **TCP Message Handling:** Each client will maintain its own incoming and outgoing byte buffers. TriviaNet uses UTF-8 JSON messages framed with a 4-byte big-endian length prefix. Because TCP does not preserve application message boundaries, received bytes will remain buffered until both the complete length header and the complete JSON payload are available. Outgoing messages will also be buffered so that partial `send()` operations do not block the event loop.
+
+- **Synchronization and Thread Safety:** Shared game state will include the connected players, current question number, current question, submitted answers, player scores, sudden-death status, and the current state of the game. Because all socket events and game-state changes are processed by one event-loop thread, only one handler modifies the shared state at a time. TriviaNet therefore uses event-loop state isolation rather than `threading.Lock` or other mutexes to prevent race conditions.
+
+- **Server Authority:** The server will be authoritative over all game state. Clients may submit actions and display state received from the server, but they will not independently modify official scores, advance rounds, select the next question, or determine the winner.
+
+### 3.2 State & Score Synchronization Across Clients
+
+- **Round Mechanics:** TriviaNet does not use alternating player turns. Instead, each round operates in lockstep. The server broadcasts the same `SEND_QUESTION` message to both players, and each player independently responds with one `SEND_ANSWER`.
+
+- **Answer Validation:** Before accepting an answer, the server will verify that the client is a registered player, the game is currently accepting answers, the supplied `question_number` matches the active question, the answer is between 1 and 4, and the player has not already submitted an answer for that round. Invalid requests will not modify game state and will generate an appropriate `ERROR`, such as `OUT_OF_TURN`, `INVALID_ANSWER`, `DUPLICATE_ANSWER`, or `STALE_QUESTION`.
+
+- **Waiting for Both Players:** When the first valid answer is received, the server will store that answer and return to the selector event loop rather than blocking while waiting for the second player. The round will not be evaluated until both players have submitted valid answers.
+
+- **Score Synchronization:** Once both answers have been received, the server will compare them with the correct answer and update the scores. Each player will receive one point for a correct response. The server will then construct an authoritative `STATE_UPDATE` containing the completed question number, correct answer, both cumulative scores, and sudden-death status.
+
+- **State Broadcast:** The same completed game-state snapshot will be used to queue a `STATE_UPDATE` for both clients before the server advances to the next game-state transition. The individual TCP writes may occur at slightly different times, but both clients will receive state derived from the same server-side update.
+
+- **Round Progression:** After broadcasting the results, the server will reset the submitted-answer state and send the next `SEND_QUESTION`. This process will repeat for the predetermined number of normal rounds.
+
+- **Win and Sudden-Death Handling:** At the end of the normal rounds, the server will compare the scores. If one player has the higher score, the server will broadcast `GAME_OVER` identifying the winner and final scores. If the scores are tied, the game will enter sudden death. Additional synchronized questions will be sent until exactly one player answers correctly while the other answers incorrectly. The server will then send `GAME_OVER` with the final result.
+
+- **Disconnect Handling:** A client may intentionally leave using `DISCONNECT`, or the server may detect a lost connection through TCP EOF or a socket exception. If a player disconnects while waiting in the lobby, the lobby state will be reset. If a player disconnects during an active match, the remaining player will win by forfeit and will receive a `GAME_OVER` message with the appropriate final state.
+
+### 3.3 Sprint 2 Design Deliverables
+
+Sprint 2 will produce a server concurrency and state-synchronization architecture document describing the selector-based connection lifecycle, non-blocking socket behavior, shared game state, race-condition prevention strategy, answer validation, score synchronization, and connection cleanup.
+
+The design will also include a Mermaid sequenceDiagram showing the interaction between both clients and the authoritative server. The diagram will document question broadcast, valid and invalid SEND_ANSWER requests, server-side validation, score updates, STATE_UPDATE broadcasts, and game completion or sudden-death transitions.
+
+These designs will serve as the implementation blueprint for Sprint 3 so that the client and server code remain consistent with the application-layer protocol and game-state behavior defined in the earlier sprints.
 
 --- 
 
