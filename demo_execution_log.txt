@@ -1,0 +1,128 @@
+TriviaNet Sprint 3 - Intermediate Gameplay Execution Log
+=========================================================
+
+Test environment: localhost / 127.0.0.1
+Server command:
+    python3 server.py -p 65432
+
+Client commands (run in separate terminals):
+    python3 client.py -i localhost -p 65432
+    python3 client.py -i localhost -p 65432
+
+The following test used aliases AryaFan and JonFan and completed three normal rounds.
+
+---------------- SERVER OUTPUT ----------------
+TriviaNet server listening on 0.0.0.0:65432
+Waiting for Player 1...
+Accepted TCP connection from ('127.0.0.1', 41890)
+Player 1 registered as 'AryaFan'
+Accepted TCP connection from ('127.0.0.1', 41904)
+Player 2 registered as 'JonFan'
+Game starting: AryaFan vs. JonFan
+Sent question 1 (normal round)
+Received Q1 answer from JonFan: option 2
+Received Q1 answer from AryaFan: option 1
+Round 1 complete. Score: 1-0
+Sent question 2 (normal round)
+Received Q2 answer from JonFan: option 2
+Received Q2 answer from AryaFan: option 2
+Round 2 complete. Score: 2-1
+Sent question 3 (normal round)
+Received Q3 answer from AryaFan: option 3
+Received Q3 answer from JonFan: option 4
+Round 3 complete. Score: 3-1
+Game over. Winner: AryaFan (3-1, NORMAL)
+Match cleanup complete. Waiting for Player 1...
+
+---------------- CLIENT 1 OUTPUT ----------------
+Resolved localhost to 127.0.0.1
+Choose a player alias (1-16 characters): Connected to localhost:65432
+Waiting for Player 2...
+
+Game started!
+You are Player 1.
+Opponent: JonFan
+
+Question 1: What are the words of House Stark?
+  1. Winter is Coming
+  2. Ours is the Fury
+  3. Hear Me Roar!
+  4. Fire and Blood
+Your answer for question 1 (1-4): Answer submitted. Waiting for the other player...
+
+Round 1 complete.
+Correct answer: Winter is Coming
+Score - Player 1: 1 | Player 2: 0
+
+Question 2: Who is Eddard Stark's wife?
+  1. Lysa Arryn
+  2. Catelyn Tully
+  3. Cersei Lannister
+  4. Asha Greyjoy
+Your answer for question 2 (1-4): Answer submitted. Waiting for the other player...
+
+Round 2 complete.
+Correct answer: Catelyn Tully
+Score - Player 1: 2 | Player 2: 1
+
+Question 3: What is the ancestral seat of House Lannister?
+  1. Highgarden
+  2. Storm's End
+  3. Casterly Rock
+  4. The Eyrie
+Your answer for question 3 (1-4): Answer submitted. Waiting for the other player...
+
+Round 3 complete.
+Correct answer: Casterly Rock
+Score - Player 1: 3 | Player 2: 1
+
+Game over!
+Winner: AryaFan
+Final score - Player 1: 3 | Player 2: 1
+End reason: NORMAL
+
+---------------- CLIENT 2 OUTPUT ----------------
+Resolved localhost to 127.0.0.1
+Choose a player alias (1-16 characters): Connected to localhost:65432
+
+Game started!
+You are Player 2.
+Opponent: AryaFan
+
+Question 1: What are the words of House Stark?
+  1. Winter is Coming
+  2. Ours is the Fury
+  3. Hear Me Roar!
+  4. Fire and Blood
+Your answer for question 1 (1-4): Answer submitted. Waiting for the other player...
+
+Round 1 complete.
+Correct answer: Winter is Coming
+Score - Player 1: 1 | Player 2: 0
+
+Question 2: Who is Eddard Stark's wife?
+  1. Lysa Arryn
+  2. Catelyn Tully
+  3. Cersei Lannister
+  4. Asha Greyjoy
+Your answer for question 2 (1-4): Answer submitted. Waiting for the other player...
+
+Round 2 complete.
+Correct answer: Catelyn Tully
+Score - Player 1: 2 | Player 2: 1
+
+Question 3: What is the ancestral seat of House Lannister?
+  1. Highgarden
+  2. Storm's End
+  3. Casterly Rock
+  4. The Eyrie
+Your answer for question 3 (1-4): Answer submitted. Waiting for the other player...
+
+Round 3 complete.
+Correct answer: Casterly Rock
+Score - Player 1: 3 | Player 2: 1
+
+Game over!
+Winner: AryaFan
+Final score - Player 1: 3 | Player 2: 1
+End reason: NORMAL

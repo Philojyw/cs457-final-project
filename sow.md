@@ -154,7 +154,41 @@ These designs will serve as the implementation blueprint for Sprint 3 so that th
 
 --- 
 
-## 4. Coding & AI Implementation Plan (Sprint 3) *To be completed during Sprint 3.* 
+## 4. Coding & AI Implementation Plan (Sprint 3)
+
+### 4.1 Client Implementation
+
+The Sprint 3 client is implemented in `client.py`. It uses `argparse` for the required `-i` server hostname and `-p` port arguments and validates that the selected port is between 1024 and 65535. The client resolves the configured server name using `socket.gethostbyname()` and catches `socket.gaierror` so DNS failures produce a clear error message rather than a traceback.
+
+After connecting, the client prompts for a player alias and sends a protocol-compliant `CONNECT` message. It then processes `LOBBY_WAIT`, `GAME_START`, `SEND_QUESTION`, `STATE_UPDATE`, `ERROR`, and `GAME_OVER` messages. Questions and score summaries are displayed in a human-readable terminal interface. Client answers are sent using `SEND_ANSWER` with the active `question_number`.
+
+### 4.2 Server Implementation
+
+The Sprint 3 server is implemented in `server.py`. It parses the required `-p` argument, validates the port, binds to `0.0.0.0`, and uses `selectors.DefaultSelector` with non-blocking client sockets as specified in Sprint 2.
+
+Each client connection maintains independent input and output buffers. Incoming TCP data is accumulated until a complete 4-byte big-endian length header and the corresponding UTF-8 JSON payload are available. Outgoing framed messages are queued and drained through selector write events so one slow client does not block the other.
+
+The server implements the Sprint 1 FSM and remains authoritative over aliases, question progression, submitted answers, scores, sudden death, disconnects, and final results. Invalid, stale, duplicate, and out-of-turn messages return protocol-defined `ERROR` responses without corrupting game state.
+
+### 4.3 Testing Plan and Results
+
+Sprint 3 testing is performed locally using `localhost` before CML deployment. Testing includes:
+
+- CLI help and required argument handling for both applications.
+- Port validation for the range 1024-65535.
+- Successful DNS resolution using `localhost`.
+- Graceful `socket.gaierror` handling with an invalid hostname.
+- Two simultaneous clients completing at least three trivia rounds.
+- Synchronized `STATE_UPDATE` score broadcasts to both clients.
+- Sudden-death transition and winner resolution after a tied normal game.
+- Mid-game disconnect handling and `GAME_OVER` with `end_reason="FORFEIT"`.
+
+The successful three-round localhost run is recorded in `demo_execution_log.txt`.
+
+### 4.4 AI Use and Verification
+
+ChatGPT was used to help translate the existing Sprint 1 protocol/FSM and Sprint 2 concurrency design into an initial Python implementation. The generated code was constrained to the documented message schemas and framing rules. The implementation was then compiled and exercised through local integration tests, including normal gameplay, sudden death, disconnect/forfeit handling, CLI validation, and DNS failure handling. AI usage details are recorded in `ai_use_report.md`.
+
 
 --- 
 
